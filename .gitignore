@@ -41,3 +41,18 @@ public/mockServiceWorker.js
 # Env files
 .env*
 !.env.example
+
+# TypeScript
+*.tsbuildinfo
+
+# Tooling Caches
+.eslintcache
+.stylelintcache
+
+# Testing Coverage
+/coverage
+.nyc_output
+
+# Vite specific
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
