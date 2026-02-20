@@ -15,7 +15,6 @@ const stats = ref([
   {
     title: "Total Deployments",
     value: "0",
-    change: "0%",
     icon: "ri-rocket-line",
     color: "primary",
   },
@@ -59,7 +58,7 @@ onMounted(() => {
             <span class="text-caption">{{ stat.title }}</span>
           </div>
           <VSpacer />
-          <span
+          <!-- <span
             class="text-caption"
             :class="
               stat.change.startsWith('+')
@@ -70,7 +69,7 @@ onMounted(() => {
             "
           >
             {{ stat.change }}
-          </span>
+          </span> -->
         </VCardText>
       </VCard>
     </VCol>

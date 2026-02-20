@@ -3,23 +3,24 @@ import { ref, onMounted } from "vue";
 import { deploymentApi } from "@/services/api";
 
 interface Company {
-  id: number
-  name: string
-  company_id: string
-  branding: any[] | null
-  api_config: any[] | null
-  created_at: string | null
-  updated_at: string | null
+  id: number;
+  name: string;
+  company_id: string;
+  branding: any[] | null;
+  api_config: any[] | null;
+  created_at: string | null;
+  updated_at: string | null;
+  linked_apps: { app_id: number; app_name: string }[] | null;
 }
 
-interface ApiKey {
-  id: number
-  app_name: string | null
+interface Deployment {
+  app_id: number;
+  app_name: string | null;
 }
 
-const companies = ref<Company[]>([])
-const availableApps = ref<{ title: string; value: number }[]>([])
-const isLoading = ref(false)
+const companies = ref<Company[]>([]);
+const availableApps = ref<{ title: string; value: number }[]>([]);
+const isLoading = ref(false);
 
 const showCreateDialog = ref(false);
 const createStep = ref(1);
@@ -36,32 +37,33 @@ const branding = ref({
 const apiEndpoint = ref("");
 
 const fetchCompanies = async () => {
-  isLoading.value = true
+  isLoading.value = true;
   try {
-    const response = await deploymentApi.getCompanies()
-    companies.value = response.data || []
+    const response = await deploymentApi.getCompanies();
+    companies.value = response.data || [];
   } catch (error) {
     // Handle error silently
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const fetchAvailableApps = async () => {
   try {
-    const response = await deploymentApi.getApiKeys()
-    const keys: ApiKey[] = response.data || []
-    const uniqueApps = keys.filter((k, index, self) => 
-      index === self.findIndex((t) => t.app_name === k.app_name)
-    )
-    availableApps.value = uniqueApps.map((k) => ({
-      title: k.app_name!,
-      value: k.id,
-    }))
+    const response = await deploymentApi.getDeployments();
+    const deployments: Deployment[] = response.data || [];
+    const uniqueApps = deployments.filter(
+      (d, index, self) =>
+        index === self.findIndex((t) => t.app_name === d.app_name),
+    );
+    availableApps.value = uniqueApps.map((d) => ({
+      title: d.app_name!,
+      value: d.app_id,
+    }));
   } catch (error) {
-    availableApps.value = []
+    availableApps.value = [];
   }
-}
+};
 
 const resetForm = () => {
   createStep.value = 1;
@@ -80,7 +82,7 @@ const resetForm = () => {
 
 const goToStep2 = async () => {
   if (newCompanyName.value.trim()) {
-    await fetchAvailableApps()
+    await fetchAvailableApps();
     createStep.value = 2;
   }
 };
@@ -89,25 +91,25 @@ const createCompany = async () => {
   try {
     await deploymentApi.createCompany({
       company_name: newCompanyName.value,
-      app_id: selectedAppId.value!,
+      app_id: Number(selectedAppId.value),
       primary_color: branding.value.primaryColor || undefined,
       secondary_color: branding.value.secondaryColor || undefined,
       background_color: branding.value.backgroundColor || undefined,
       surface_color: branding.value.surfaceColor || undefined,
       theme_mode: branding.value.themeMode || undefined,
       api_endpoint: apiEndpoint.value || undefined,
-    })
-    showCreateDialog.value = false
-    resetForm()
-    await fetchCompanies()
+    });
+    showCreateDialog.value = false;
+    resetForm();
+    await fetchCompanies();
   } catch (error: any) {
     // Handle error silently
   }
 };
 
 onMounted(() => {
-  fetchCompanies()
-})
+  fetchCompanies();
+});
 </script>
 
 <template>
@@ -140,12 +142,12 @@ onMounted(() => {
               <td>{{ company.company_id }}</td>
               <td>
                 <VChip
-                  v-for="(item, idx) in (company.branding || []).slice(0, 3)"
+                  v-for="(item, idx) in (company.linked_apps || []).slice(0, 3)"
                   :key="idx"
                   size="small"
                   class="mr-1 mb-1"
                 >
-                  {{ item.name || company.name }}
+                  {{ item.app_name || company.name }}
                 </VChip>
               </td>
               <td>
@@ -168,12 +170,20 @@ onMounted(() => {
       <VCard>
         <VCardTitle class="d-flex justify-space-between align-center">
           <span>Create Company - Step {{ createStep }}/2</span>
-          <VBtn icon variant="text" size="small" @click="showCreateDialog = false; resetForm()">
+          <VBtn
+            icon
+            variant="text"
+            size="small"
+            @click="
+              showCreateDialog = false;
+              resetForm();
+            "
+          >
             <VIcon icon="ri-close-line" />
           </VBtn>
         </VCardTitle>
 
-        <VCardText style="min-height: 300px;">
+        <VCardText style="min-height: 300px">
           <div v-if="createStep === 1">
             <VTextField
               v-model="newCompanyName"
@@ -270,13 +280,24 @@ onMounted(() => {
             Back
           </VBtn>
           <VSpacer />
-          <VBtn variant="text" @click="showCreateDialog = false; resetForm()">
+          <VBtn
+            variant="text"
+            @click="
+              showCreateDialog = false;
+              resetForm();
+            "
+          >
             Cancel
           </VBtn>
           <VBtn v-if="createStep === 1" color="primary" @click="goToStep2">
             Next
           </VBtn>
-          <VBtn v-else color="primary" @click="createCompany" :disabled="!selectedAppId">
+          <VBtn
+            v-else
+            color="primary"
+            @click="createCompany"
+            :disabled="!selectedAppId"
+          >
             Create
           </VBtn>
         </VCardActions>

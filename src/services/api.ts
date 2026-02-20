@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.88.189:8001/api";
+const API_BASE_URL = "http://192.168.100.39:8000/api";
 
 const getToken = () => localStorage.getItem("token");
 
@@ -14,7 +14,17 @@ const getHeaders = () => {
 };
 
 const handleResponse = async (response: Response) => {
+  if (response.type === 'opaque' || response.redirected) {
+    window.location.href = '/login'
+    throw new Error('Redirected to login')
+  }
+  
   if (!response.ok) {
+    const contentType = response.headers.get('content-type')
+    if (contentType?.includes('text/html')) {
+      window.location.href = '/login'
+      throw new Error('Redirected to login')
+    }
     const errorData = await response
       .json()
       .catch(() => ({ message: "An error occurred" }));
