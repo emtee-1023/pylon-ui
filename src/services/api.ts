@@ -125,4 +125,73 @@ export const deploymentApi = {
     });
     return handleResponse(response);
   },
+
+  getAppConfigs: async () => {
+    const response = await fetch(`${API_BASE_URL}/app-configs`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  getAppConfig: async (id: number) => {
+    const response = await fetch(`${API_BASE_URL}/app-configs/${id}`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  createAppConfig: async (data: {
+    company_id: number;
+    app_id: number;
+    platform: string;
+    branding?: {
+      primary_color?: string;
+      secondary_color?: string;
+      background_color?: string;
+      surface_color?: string;
+      theme_mode?: string;
+    };
+    api_endpoint?: string;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/app-configs`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+
+  updateAppConfigBranding: async (id: number, branding: {
+    primary_color?: string;
+    secondary_color?: string;
+    background_color?: string;
+    surface_color?: string;
+    theme_mode?: string;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/app-configs/${id}/branding`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify(branding),
+    });
+    return handleResponse(response);
+  },
+
+  updateAppConfigApiEndpoint: async (id: number, api_endpoint: string) => {
+    const response = await fetch(`${API_BASE_URL}/app-configs/${id}/api-endpoint`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ api_endpoint }),
+    });
+    return handleResponse(response);
+  },
+
+  deleteAppConfig: async (id: number) => {
+    const response = await fetch(`${API_BASE_URL}/app-configs/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(),
+    });
+    return handleResponse(response);
+  },
 };

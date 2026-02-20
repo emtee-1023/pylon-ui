@@ -7,7 +7,7 @@ interface ApiKey {
   app_name: string | null;
   key_hash: string;
   scopes: string[] | null;
-  active: boolean;
+  status: boolean;
   last_used_at: string | null;
   generated_at: string | null;
   updated_at: string | null;
@@ -155,8 +155,8 @@ onMounted(() => {
                   }}
                 </td>
                 <td>
-                  <VChip :color="key.active ? 'success' : 'error'" size="small">
-                    {{ key.active ? "Active" : "Inactive" }}
+                  <VChip :color="key.status ? 'success' : 'error'" size="small">
+                    {{ key.status ? "Active" : "Inactive" }}
                   </VChip>
                 </td>
                 <td>
