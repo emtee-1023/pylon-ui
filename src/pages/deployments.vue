@@ -1,24 +1,56 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from "vue";
+import { deploymentApi } from "@/services/api";
 
-const deployments = ref([
-  { id: 1, appName: 'Mobile App v1', environment: 'Production', status: 'Active', version: '1.0.0', deployedAt: '2024-02-01 10:30' },
-  { id: 2, appName: 'Mobile App v1', environment: 'Staging', status: 'Active', version: '1.0.1-beta', deployedAt: '2024-01-28 15:45' },
-  { id: 3, appName: 'Mobile App v1', environment: 'Development', status: 'Failed', version: '1.0.2-dev', deployedAt: '2024-01-25 09:00' },
-  { id: 4, appName: 'Mobile App v2', environment: 'Production', status: 'Active', version: '2.0.0', deployedAt: '2024-01-20 14:20' },
-  { id: 5, appName: 'Mobile App v2', environment: 'Staging', status: 'Inactive', version: '2.1.0-beta', deployedAt: '2024-01-15 11:10' },
-])
+interface Deployment {
+  app_id: number;
+  app_name: string;
+  platform: string;
+  version: string;
+  status: string;
+  deployed_at: string;
+}
+
+const deployments = ref<Deployment[]>([]);
+const isLoading = ref(false);
+const snackbar = ref(false);
+const snackbarText = ref("");
+const snackbarColor = ref("success");
 
 const statusColor = (status: string) => {
   switch (status) {
-    case 'Active': return 'success'
-    case 'Failed': return 'error'
-    case 'Inactive': return 'warning'
-    default: return 'default'
+    case "Active":
+      return "success";
+    case "Failed":
+      return "error";
+    case "Inactive":
+      return "warning";
+    default:
+      return "default";
   }
-}
+};
 
-const search = ref('')
+const fetchDeployments = async () => {
+  isLoading.value = true;
+  try {
+    const response = await deploymentApi.getDeployments();
+    console.log("Deployments response:", response);
+    deployments.value = response.data || [];
+  } catch (error: any) {
+    console.error("Failed to fetch deployments:", error);
+    snackbarText.value = error.message;
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const search = ref("");
+
+onMounted(() => {
+  fetchDeployments();
+});
 </script>
 
 <template>
@@ -30,7 +62,7 @@ const search = ref('')
     <VCol cols="12">
       <VCard>
         <VCardTitle class="d-flex justify-space-between align-center">
-          <span>All Deployments</span>
+          <span>All Deployed Mobile Applications</span>
           <VTextField
             v-model="search"
             label="Search"
@@ -44,45 +76,29 @@ const search = ref('')
           <thead>
             <tr>
               <th>App Name</th>
-              <th>Environment</th>
+              <th>Platform</th>
               <th>Version</th>
               <th>Status</th>
               <th>Deployed At</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="deployment in deployments"
-              :key="deployment.id"
-            >
-              <td>{{ deployment.appName }}</td>
-              <td>{{ deployment.environment }}</td>
-              <td><code>{{ deployment.version }}</code></td>
+            <tr v-for="deployment in deployments" :key="deployment.app_id">
+              <td>{{ deployment.app_name }}</td>
+              <td>{{ deployment.platform }}</td>
               <td>
-                <VChip
-                  :color="statusColor(deployment.status)"
-                  size="small"
-                >
+                <code>{{ deployment.version }}</code>
+              </td>
+              <td>
+                <VChip :color="statusColor(deployment.status)" size="small">
                   {{ deployment.status }}
                 </VChip>
               </td>
-              <td>{{ deployment.deployedAt }}</td>
-              <td>
-                <VBtn
-                  icon
-                  size="small"
-                  variant="text"
-                >
-                  <VIcon icon="ri-eye-line" />
-                </VBtn>
-                <VBtn
-                  icon
-                  size="small"
-                  variant="text"
-                >
-                  <VIcon icon="ri-restart-line" />
-                </VBtn>
+              <td>{{ deployment.deployed_at }}</td>
+            </tr>
+            <tr v-if="deployments.length === 0 && !isLoading">
+              <td colspan="5" class="text-center text-grey">
+                No deployments found
               </td>
             </tr>
           </tbody>

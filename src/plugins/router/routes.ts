@@ -17,6 +17,10 @@ export const routes = [
         component: () => import('@/pages/api-keys.vue'),
       },
       {
+        path: 'companies',
+        component: () => import('@/pages/companies.vue'),
+      },
+      {
         path: 'app-config',
         component: () => import('@/pages/app-config.vue'),
       },

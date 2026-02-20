@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useTheme } from 'vuetify'
+import { useRouter } from 'vue-router'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
+import { authApi } from '@/services/api'
 
 import logo from '@images/logo.svg?raw'
 import authV1MaskDark from '@images/pages/auth-v1-mask-dark.png'
@@ -8,13 +10,17 @@ import authV1MaskLight from '@images/pages/auth-v1-mask-light.png'
 import authV1Tree2 from '@images/pages/auth-v1-tree-2.png'
 import authV1Tree from '@images/pages/auth-v1-tree.png'
 
+const router = useRouter()
+
 const form = ref({
-  email: '',
+  name: '',
   password: '',
   remember: false,
 })
 
 const vuetifyTheme = useTheme()
+const isLoading = ref(false)
+const errorMessage = ref('')
 
 const authThemeMask = computed(() => {
   return vuetifyTheme.global.name.value === 'light'
@@ -23,6 +29,20 @@ const authThemeMask = computed(() => {
 })
 
 const isPasswordVisible = ref(false)
+
+const handleLogin = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
+  
+  try {
+    await authApi.login(form.value.name, form.value.password)
+    router.push('/dashboard')
+  } catch (error: any) {
+    errorMessage.value = error.message || 'Login failed'
+  } finally {
+    isLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -44,14 +64,14 @@ const isPasswordVisible = ref(false)
             v-html="logo"
           />
           <h2 class="font-weight-medium text-2xl text-uppercase">
-            Materio
+            Pylon
           </h2>
         </RouterLink>
       </VCardItem>
 
       <VCardText class="pt-2">
         <h4 class="text-h4 mb-1">
-          Welcome to Materio! 👋🏻
+          Welcome to Pylon! 👋🏻
         </h4>
         <p class="mb-0">
           Please sign-in to your account and start the adventure
@@ -59,18 +79,27 @@ const isPasswordVisible = ref(false)
       </VCardText>
 
       <VCardText>
-        <VForm @submit.prevent="() => {}">
+        <VForm @submit.prevent="handleLogin">
           <VRow>
-            <!-- email -->
+            <VCol cols="12">
+              <VAlert
+                v-if="errorMessage"
+                type="error"
+                class="mb-4"
+                closable
+              >
+                {{ errorMessage }}
+              </VAlert>
+            </VCol>
+
             <VCol cols="12">
               <VTextField
-                v-model="form.email"
-                label="Email"
-                type="email"
+                v-model="form.name"
+                label="Name"
+                type="text"
               />
             </VCol>
 
-            <!-- password -->
             <VCol cols="12">
               <VTextField
                 v-model="form.password"
@@ -82,60 +111,20 @@ const isPasswordVisible = ref(false)
                 @click:append-inner="isPasswordVisible = !isPasswordVisible"
               />
 
-              <!-- remember me checkbox -->
               <div class="d-flex align-center justify-space-between flex-wrap my-6">
                 <VCheckbox
                   v-model="form.remember"
                   label="Remember me"
                 />
-
-                <a
-                  class="text-primary"
-                  href="javascript:void(0)"
-                >
-                  Forgot Password?
-                </a>
               </div>
 
-              <!-- login button -->
               <VBtn
                 block
                 type="submit"
-                to="/"
+                :loading="isLoading"
               >
                 Login
               </VBtn>
-            </VCol>
-
-            <!-- create account -->
-            <VCol
-              cols="12"
-              class="text-center text-base"
-            >
-              <span>New on our platform?</span>
-              <RouterLink
-                class="text-primary ms-2"
-                to="/register"
-              >
-                Create an account
-              </RouterLink>
-            </VCol>
-
-            <VCol
-              cols="12"
-              class="d-flex align-center"
-            >
-              <VDivider />
-              <span class="mx-4">or</span>
-              <VDivider />
-            </VCol>
-
-            <!-- auth providers -->
-            <VCol
-              cols="12"
-              class="text-center"
-            >
-              <AuthProvider />
             </VCol>
           </VRow>
         </VForm>
@@ -154,7 +143,6 @@ const isPasswordVisible = ref(false)
       :width="350"
     />
 
-    <!-- bg img -->
     <VImg
       class="auth-footer-mask d-none d-md-block"
       :src="authThemeMask"

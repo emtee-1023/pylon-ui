@@ -38,6 +38,13 @@ import VerticalNavLink from '@layouts/components/VerticalNavLink.vue'
   />
   <VerticalNavLink
     :item="{
+      title: 'Companies',
+      icon: 'ri-building-line',
+      to: '/companies',
+    }"
+  />
+  <VerticalNavLink
+    :item="{
       title: 'App Configuration',
       icon: 'ri-settings-3-line',
       to: '/app-config',

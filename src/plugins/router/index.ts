@@ -7,6 +7,23 @@ const router = createRouter({
   routes,
 })
 
+const isAuthenticated = () => {
+  return !!localStorage.getItem('token')
+}
+
+router.beforeEach((to, from, next) => {
+  const publicPaths = ['/login', '/register']
+  const isAuth = isAuthenticated()
+  
+  if (!publicPaths.includes(to.path) && !isAuth) {
+    next('/login')
+  } else if (to.path === '/login' && isAuth) {
+    next('/dashboard')
+  } else {
+    next()
+  }
+})
+
 export default function (app: App) {
   app.use(router)
 }

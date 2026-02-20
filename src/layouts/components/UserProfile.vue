@@ -1,5 +1,39 @@
 <script setup lang="ts">
 import avatar1 from '@images/avatars/avatar-1.png'
+import { authApi } from '@/services/api'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const user = ref<{ name?: string; email?: string; [key: string]: any }>({})
+
+const fetchProfile = async () => {
+  try {
+    const data = await authApi.profile()
+    if (typeof data === 'object') {
+      user.value = data
+    } else if (typeof data === 'string') {
+      try {
+        user.value = JSON.parse(data)
+      } catch {
+        user.value = { name: data }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch profile:', error)
+  }
+}
+
+fetchProfile()
+
+const handleLogout = async () => {
+  try {
+    await authApi.logout()
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -48,14 +82,14 @@ import avatar1 from '@images/avatars/avatar-1.png'
             </template>
 
             <VListItemTitle class="font-weight-semibold">
-              John Doe
+              {{ user.name || 'User' }}
             </VListItemTitle>
             <VListItemSubtitle>Admin</VListItemSubtitle>
           </VListItem>
           <VDivider class="my-2" />
 
           <!-- 👉 Profile -->
-          <VListItem link>
+          <!-- <VListItem link>
             <template #prepend>
               <VIcon
                 class="me-2"
@@ -65,10 +99,10 @@ import avatar1 from '@images/avatars/avatar-1.png'
             </template>
 
             <VListItemTitle>Profile</VListItemTitle>
-          </VListItem>
+          </VListItem> -->
 
           <!-- 👉 Settings -->
-          <VListItem link>
+          <!-- <VListItem link>
             <template #prepend>
               <VIcon
                 class="me-2"
@@ -78,10 +112,10 @@ import avatar1 from '@images/avatars/avatar-1.png'
             </template>
 
             <VListItemTitle>Settings</VListItemTitle>
-          </VListItem>
+          </VListItem> -->
 
           <!-- 👉 Pricing -->
-          <VListItem link>
+          <!-- <VListItem link>
             <template #prepend>
               <VIcon
                 class="me-2"
@@ -91,10 +125,10 @@ import avatar1 from '@images/avatars/avatar-1.png'
             </template>
 
             <VListItemTitle>Pricing</VListItemTitle>
-          </VListItem>
+          </VListItem> -->
 
           <!-- 👉 FAQ -->
-          <VListItem link>
+          <!-- <VListItem link>
             <template #prepend>
               <VIcon
                 class="me-2"
@@ -104,13 +138,13 @@ import avatar1 from '@images/avatars/avatar-1.png'
             </template>
 
             <VListItemTitle>FAQ</VListItemTitle>
-          </VListItem>
+          </VListItem> -->
 
           <!-- Divider -->
           <VDivider class="my-2" />
 
           <!-- 👉 Logout -->
-          <VListItem to="/login">
+          <VListItem @click="handleLogout">
             <template #prepend>
               <VIcon
                 class="me-2"
