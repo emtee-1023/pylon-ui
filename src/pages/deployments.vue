@@ -34,10 +34,8 @@ const fetchDeployments = async () => {
   isLoading.value = true;
   try {
     const response = await deploymentApi.getDeployments();
-    console.log("Deployments response:", response);
     deployments.value = response.data || [];
   } catch (error: any) {
-    console.error("Failed to fetch deployments:", error);
     snackbarText.value = error.message;
     snackbarColor.value = "error";
     snackbar.value = true;

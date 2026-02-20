@@ -33,10 +33,8 @@ const fetchApiKeys = async () => {
   isLoading.value = true;
   try {
     const response = await deploymentApi.getApiKeys();
-    console.log("API keys response:", response);
     apiKeys.value = response.data || [];
   } catch (error: any) {
-    console.error("Failed to fetch API keys:", error);
     snackbarText.value = error.message;
     snackbarColor.value = "error";
     snackbar.value = true;
@@ -57,7 +55,6 @@ const createKey = async () => {
     showKeyDialog.value = true;
     await fetchApiKeys();
   } catch (error: any) {
-    console.error("Failed to create API key:", error.message);
     snackbarText.value = error.message;
     snackbarColor.value = "error";
     snackbar.value = true;
@@ -86,7 +83,6 @@ const deleteKey = async () => {
   if (!keyToDelete.value) return;
 
   const id = keyToDelete.value.id;
-  console.log("Deleting key with id:", id, "type:", typeof id);
   if (id === undefined || id === null) {
     snackbarText.value = "Cannot delete: ID is undefined";
     snackbarColor.value = "error";
@@ -101,7 +97,6 @@ const deleteKey = async () => {
     snackbarColor.value = "success";
     snackbar.value = true;
   } catch (error: any) {
-    console.error("Failed to delete API key:", error.message);
     snackbarText.value = error.message;
     snackbarColor.value = "error";
     snackbar.value = true;

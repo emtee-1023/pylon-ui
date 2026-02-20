@@ -12,7 +12,7 @@ const config = ref({
 })
 
 const saveConfig = () => {
-  console.log('Saving config:', config.value)
+  // TODO: Implement save config
 }
 </script>
 

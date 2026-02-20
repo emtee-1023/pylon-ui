@@ -41,7 +41,7 @@ const fetchCompanies = async () => {
     const response = await deploymentApi.getCompanies()
     companies.value = response.data || []
   } catch (error) {
-    console.error('Failed to fetch companies:', error)
+    // Handle error silently
   } finally {
     isLoading.value = false
   }
@@ -59,7 +59,6 @@ const fetchAvailableApps = async () => {
       value: k.id,
     }))
   } catch (error) {
-    console.error('Failed to fetch apps:', error)
     availableApps.value = []
   }
 }
@@ -102,7 +101,7 @@ const createCompany = async () => {
     resetForm()
     await fetchCompanies()
   } catch (error: any) {
-    console.error('Failed to create company:', error.message)
+    // Handle error silently
   }
 };
 

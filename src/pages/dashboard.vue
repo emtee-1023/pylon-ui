@@ -31,7 +31,7 @@ const fetchDeployments = async () => {
     recentDeployments.value = response.data || [];
     stats.value[0].value = String(recentDeployments.value.length);
   } catch (error) {
-    console.error("Failed to fetch deployments:", error);
+    // Handle error silently
   } finally {
     isLoading.value = false;
   }
