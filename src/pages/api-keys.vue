@@ -148,11 +148,7 @@ onMounted(() => {
               >
                 <td>{{ key.app_name || "-" }}</td>
                 <td>
-                  {{
-                    formatDate(
-                      key.last_used_at || key.generated_at || key.updated_at,
-                    )
-                  }}
+                  {{ key.generated_at }}
                 </td>
                 <td>
                   <VChip :color="key.status ? 'success' : 'error'" size="small">
