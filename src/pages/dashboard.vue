@@ -13,10 +13,22 @@ interface Deployment {
 
 const stats = ref([
   {
-    title: "Total Deployments",
+    title: "Total Apps Deployed",
     value: "0",
     icon: "ri-rocket-line",
     color: "primary",
+  },
+  {
+    title: "Registered Companies",
+    value: "0",
+    icon: "ri-building-line",
+    color: "success",
+  },
+  {
+    title: "Company App Configurations",
+    value: "0",
+    icon: "ri-settings-3-line",
+    color: "warning",
   },
 ]);
 
@@ -36,8 +48,28 @@ const fetchDeployments = async () => {
   }
 };
 
+const fetchCompanies = async () => {
+  try {
+    const response = await deploymentApi.getCompanies();
+    stats.value[1].value = String((response.data || []).length);
+  } catch (error) {
+    // Handle error silently
+  }
+};
+
+const fetchAppConfigs = async () => {
+  try {
+    const response = await deploymentApi.getAppConfigs();
+    stats.value[2].value = String((response.data || []).length);
+  } catch (error) {
+    // Handle error silently
+  }
+};
+
 onMounted(() => {
   fetchDeployments();
+  fetchCompanies();
+  fetchAppConfigs();
 });
 </script>
 
@@ -47,7 +79,7 @@ onMounted(() => {
       <h1 class="mb-5">Dashboard</h1>
     </VCol>
 
-    <VCol v-for="stat in stats" :key="stat.title" cols="12" sm="6" md="3">
+    <VCol v-for="stat in stats" :key="stat.title" cols="12" md="4">
       <VCard>
         <VCardText class="d-flex align-center">
           <VAvatar :color="stat.color" variant="tonal" size="48">

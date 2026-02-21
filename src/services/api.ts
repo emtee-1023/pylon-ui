@@ -145,14 +145,11 @@ export const deploymentApi = {
   createAppConfig: async (data: {
     company_id: number;
     app_id: number;
-    platform: string;
-    branding?: {
-      primary_color?: string;
-      secondary_color?: string;
-      background_color?: string;
-      surface_color?: string;
-      theme_mode?: string;
-    };
+    primary_color?: string;
+    secondary_color?: string;
+    background_color?: string;
+    surface_color?: string;
+    theme_mode?: string;
     api_endpoint?: string;
   }) => {
     const response = await fetch(`${API_BASE_URL}/app-configs`, {
@@ -163,34 +160,29 @@ export const deploymentApi = {
     return handleResponse(response);
   },
 
-  updateAppConfigBranding: async (id: number, branding: {
+  updateAppConfig: async (id: number, data: {
+    company_id?: number;
+    app_id?: number;
     primary_color?: string;
     secondary_color?: string;
     background_color?: string;
     surface_color?: string;
     theme_mode?: string;
+    api_endpoint?: string;
   }) => {
-    const response = await fetch(`${API_BASE_URL}/app-configs/${id}/branding`, {
+    const response = await fetch(`${API_BASE_URL}/app-configs/update`, {
       method: "PATCH",
       headers: getHeaders(),
-      body: JSON.stringify(branding),
+      body: JSON.stringify({ id, ...data }),
     });
     return handleResponse(response);
   },
 
-  updateAppConfigApiEndpoint: async (id: number, api_endpoint: string) => {
-    const response = await fetch(`${API_BASE_URL}/app-configs/${id}/api-endpoint`, {
-      method: "PATCH",
-      headers: getHeaders(),
-      body: JSON.stringify({ api_endpoint }),
-    });
-    return handleResponse(response);
-  },
-
-  deleteAppConfig: async (id: number) => {
-    const response = await fetch(`${API_BASE_URL}/app-configs/${id}`, {
+  deleteAppConfig: async (id: number, company_id: number, app_id: number) => {
+    const response = await fetch(`${API_BASE_URL}/app-configs/delete`, {
       method: "DELETE",
       headers: getHeaders(),
+      body: JSON.stringify({ id, company_id, app_id }),
     });
     return handleResponse(response);
   },

@@ -10,7 +10,7 @@ interface Company {
   api_config: any[] | null;
   created_at: string | null;
   updated_at: string | null;
-  linked_apps: { app_id: number; app_name: string }[] | null;
+  linked_apps: string[] | null;
 }
 
 interface Deployment {
@@ -142,12 +142,12 @@ onMounted(() => {
               <td>{{ company.company_id }}</td>
               <td>
                 <VChip
-                  v-for="(item, idx) in (company.linked_apps || []).slice(0, 3)"
+                  v-for="(app, idx) in (company.linked_apps || []).slice(0, 3)"
                   :key="idx"
                   size="small"
                   class="mr-1 mb-1"
                 >
-                  {{ item.app_name || company.name }}
+                  {{ app }}
                 </VChip>
               </td>
               <td>

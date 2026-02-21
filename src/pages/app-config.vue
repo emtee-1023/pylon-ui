@@ -6,7 +6,9 @@ interface AppConfig {
   id: number;
   company_name: string;
   company_id: string;
+  companyDbId: number;
   app_name: string;
+  appDbId: number;
   platform: string;
   branding: {
     primary_color: string;
@@ -16,7 +18,9 @@ interface AppConfig {
     theme_mode: string;
     logo_url?: string;
   } | null;
-  api_endpoint: string | null;
+  api_config: {
+    endpoint: string;
+  } | null;
 }
 
 interface Company {
@@ -40,15 +44,16 @@ const showCreateDialog = ref(false);
 const newConfig = ref({
   company_id: null as number | null,
   app_id: null as number | null,
-  platform: "",
   branding: {
+    themeMode: "system",
     primaryColor: "#1976D2",
     secondaryColor: "#424242",
-    backgroundColor: "#FFFFFF",
     surfaceColor: "#F5F5F5",
-    themeMode: "system",
+    backgroundColor: "#FFFFFF",
   },
-  apiEndpoint: "",
+  api_config: {
+    endpoint: "",
+  },
 });
 
 const showBrandingDialog = ref(false);
@@ -113,15 +118,16 @@ const resetForm = () => {
   newConfig.value = {
     company_id: null,
     app_id: null,
-    platform: "",
     branding: {
+      themeMode: "system",
       primaryColor: "#1976D2",
       secondaryColor: "#424242",
-      backgroundColor: "#FFFFFF",
       surfaceColor: "#F5F5F5",
-      themeMode: "system",
+      backgroundColor: "#FFFFFF",
     },
-    apiEndpoint: "",
+    api_config: {
+      endpoint: "",
+    },
   };
 };
 
@@ -130,9 +136,12 @@ const createConfig = async () => {
     await deploymentApi.createAppConfig({
       company_id: newConfig.value.company_id!,
       app_id: newConfig.value.app_id!,
-      platform: newConfig.value.platform,
-      branding: newConfig.value.branding,
-      api_endpoint: newConfig.value.apiEndpoint || undefined,
+      primary_color: newConfig.value.branding.primaryColor,
+      secondary_color: newConfig.value.branding.secondaryColor,
+      surface_color: newConfig.value.branding.surfaceColor,
+      background_color: newConfig.value.branding.backgroundColor,
+      theme_mode: newConfig.value.branding.themeMode,
+      api_endpoint: newConfig.value.api_config.endpoint,
     });
     showCreateDialog.value = false;
     resetForm();
@@ -148,7 +157,13 @@ const createConfig = async () => {
 };
 
 const openBrandingDialog = (config: AppConfig) => {
-  editingConfig.value = config;
+  const company = companies.value.find(c => c.company_id === config.company_id);
+  const deployment = deployments.value.find(d => d.app_name === config.app_name);
+  editingConfig.value = {
+    ...config,
+    companyDbId: company?.id || 0,
+    appDbId: deployment?.app_id || 0,
+  };
   editBranding.value = {
     primaryColor: config.branding?.primary_color || "#1976D2",
     secondaryColor: config.branding?.secondary_color || "#424242",
@@ -162,7 +177,9 @@ const openBrandingDialog = (config: AppConfig) => {
 const saveBranding = async () => {
   if (!editingConfig.value) return;
   try {
-    await deploymentApi.updateAppConfigBranding(editingConfig.value.id, {
+    await deploymentApi.updateAppConfig(editingConfig.value.id, {
+      company_id: editingConfig.value.companyDbId,
+      app_id: editingConfig.value.appDbId,
       primary_color: editBranding.value.primaryColor,
       secondary_color: editBranding.value.secondaryColor,
       background_color: editBranding.value.backgroundColor,
@@ -182,17 +199,27 @@ const saveBranding = async () => {
 };
 
 const openApiEndpointDialog = (config: AppConfig) => {
-  editingConfig.value = config;
-  editApiEndpoint.value = config.api_endpoint || "";
+  const company = companies.value.find(c => c.company_id === config.company_id);
+  const deployment = deployments.value.find(d => d.app_name === config.app_name);
+  editingConfig.value = {
+    ...config,
+    companyDbId: company?.id || 0,
+    appDbId: deployment?.app_id || 0,
+  };
+  editApiEndpoint.value = config.api_config?.endpoint || "";
   showApiEndpointDialog.value = true;
 };
 
 const saveApiEndpoint = async () => {
   if (!editingConfig.value) return;
   try {
-    await deploymentApi.updateAppConfigApiEndpoint(
+    await deploymentApi.updateAppConfig(
       editingConfig.value.id,
-      editApiEndpoint.value,
+      {
+        company_id: editingConfig.value.companyDbId,
+        app_id: editingConfig.value.appDbId,
+        api_endpoint: editApiEndpoint.value,
+      },
     );
     showApiEndpointDialog.value = false;
     await fetchConfigs();
@@ -207,14 +234,24 @@ const saveApiEndpoint = async () => {
 };
 
 const confirmDelete = (config: AppConfig) => {
-  configToDelete.value = config;
+  const company = companies.value.find(c => c.company_id === config.company_id);
+  const deployment = deployments.value.find(d => d.app_name === config.app_name);
+  configToDelete.value = {
+    ...config,
+    companyDbId: company?.id || 0,
+    appDbId: deployment?.app_id || 0,
+  };
   showDeleteDialog.value = true;
 };
 
 const deleteConfig = async () => {
   if (!configToDelete.value) return;
   try {
-    await deploymentApi.deleteAppConfig(configToDelete.value.id);
+    await deploymentApi.deleteAppConfig(
+      configToDelete.value.id,
+      configToDelete.value.companyDbId,
+      configToDelete.value.appDbId,
+    );
     showDeleteDialog.value = false;
     await fetchConfigs();
     snackbarText.value = "Configuration deleted successfully";
@@ -231,6 +268,8 @@ const deleteConfig = async () => {
 
 onMounted(() => {
   fetchConfigs();
+  fetchCompanies();
+  fetchDeployments();
 });
 </script>
 
@@ -345,13 +384,6 @@ onMounted(() => {
                 item-value="app_id"
               />
             </VCol>
-            <VCol cols="12" md="6">
-              <VSelect
-                v-model="newConfig.platform"
-                label="Platform"
-                :items="['ios', 'android', 'web']"
-              />
-            </VCol>
           </VRow>
 
           <VExpansionPanels class="mt-4">
@@ -408,7 +440,7 @@ onMounted(() => {
             <VExpansionPanel title="API Endpoint">
               <VExpansionPanelText>
                 <VTextField
-                  v-model="newConfig.apiEndpoint"
+                  v-model="newConfig.api_config.endpoint"
                   label="API Endpoint"
                   placeholder="https://api.example.com"
                 />
@@ -424,7 +456,7 @@ onMounted(() => {
             color="primary"
             @click="createConfig"
             :disabled="
-              !newConfig.company_id || !newConfig.app_id || !newConfig.platform
+              !newConfig.company_id || !newConfig.app_id
             "
           >
             Create
