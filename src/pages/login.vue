@@ -1,103 +1,79 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
-import { useRouter } from 'vue-router'
-import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
-import { authApi } from '@/services/api'
+import { useTheme } from "vuetify";
+import { useRouter } from "vue-router";
+import AuthProvider from "@/views/pages/authentication/AuthProvider.vue";
+import { authApi } from "@/services/api";
 
-import logo from '@images/logo.svg?raw'
-import authV1MaskDark from '@images/pages/auth-v1-mask-dark.png'
-import authV1MaskLight from '@images/pages/auth-v1-mask-light.png'
-import authV1Tree2 from '@images/pages/auth-v1-tree-2.png'
-import authV1Tree from '@images/pages/auth-v1-tree.png'
+import logo from "@images/logo.svg?raw";
+import authV1MaskDark from "@images/pages/auth-v1-mask-dark.png";
+import authV1MaskLight from "@images/pages/auth-v1-mask-light.png";
+import authV1Tree2 from "@images/pages/auth-v1-tree-2.png";
+import authV1Tree from "@images/pages/auth-v1-tree.png";
 
-const router = useRouter()
+const router = useRouter();
 
 const form = ref({
-  name: '',
-  password: '',
+  name: "",
+  password: "",
   remember: false,
-})
+});
 
-const vuetifyTheme = useTheme()
-const isLoading = ref(false)
-const errorMessage = ref('')
+const vuetifyTheme = useTheme();
+const isLoading = ref(false);
+const errorMessage = ref("");
 
 const authThemeMask = computed(() => {
-  return vuetifyTheme.global.name.value === 'light'
+  return vuetifyTheme.global.name.value === "light"
     ? authV1MaskLight
-    : authV1MaskDark
-})
+    : authV1MaskDark;
+});
 
-const isPasswordVisible = ref(false)
+const isPasswordVisible = ref(false);
 
 const handleLogin = async () => {
-  isLoading.value = true
-  errorMessage.value = ''
-  
+  isLoading.value = true;
+  errorMessage.value = "";
+
   try {
-    await authApi.login(form.value.name, form.value.password)
-    router.push('/dashboard')
+    await authApi.login(form.value.name, form.value.password);
+    router.push("/dashboard");
   } catch (error: any) {
-    errorMessage.value = error.message || 'Login failed'
+    errorMessage.value = error.message || "Login failed";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 </script>
 
 <template>
   <!-- eslint-disable vue/no-v-html -->
 
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
-    <VCard
-      class="auth-card pa-4 pt-7"
-      max-width="448"
-    >
+    <VCard class="auth-card pa-4 pt-7" max-width="448">
       <VCardItem class="justify-center">
-        <RouterLink
-          to="/"
-          class="d-flex align-center gap-3"
-        >
+        <RouterLink to="/" class="d-flex align-center gap-3">
           <!-- eslint-disable vue/no-v-html -->
-          <div
-            class="d-flex"
-            v-html="logo"
-          />
-          <h2 class="font-weight-medium text-2xl text-uppercase">
-            Pylon
-          </h2>
+          <div class="d-flex" v-html="logo" />
+          <h2 class="font-weight-medium text-2xl text-uppercase">Pylon</h2>
         </RouterLink>
       </VCardItem>
 
       <VCardText class="pt-2">
-        <h4 class="text-h4 mb-1">
-          Welcome to Pylon! 👋🏻
-        </h4>
-        <p class="mb-0">
-          Please sign-in to your account and start the adventure
-        </p>
+        <h4 class="text-h4 mb-1">Welcome to Pylon! 👋🏻</h4>
+        <p class="mb-0">Sign in to Deploy and Manage Delployed Applications</p>
       </VCardText>
 
       <VCardText>
         <VForm @submit.prevent="handleLogin">
           <VRow>
             <VCol cols="12">
-              <VAlert
-                v-if="errorMessage"
-                type="error"
-                class="mb-4"
-                closable
-              >
+              <VAlert v-if="errorMessage" type="error" class="mb-4" closable>
                 {{ errorMessage }}
               </VAlert>
             </VCol>
 
             <VCol cols="12">
-              <VTextField
-                v-model="form.name"
-                label="Name"
-                type="text"
-              />
+              <VTextField v-model="form.name" label="Name" type="text" />
             </VCol>
 
             <VCol cols="12">
@@ -107,24 +83,19 @@ const handleLogin = async () => {
                 placeholder="············"
                 :type="isPasswordVisible ? 'text' : 'password'"
                 autocomplete="password"
-                :append-inner-icon="isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'"
+                :append-inner-icon="
+                  isPasswordVisible ? 'ri-eye-off-line' : 'ri-eye-line'
+                "
                 @click:append-inner="isPasswordVisible = !isPasswordVisible"
               />
 
-              <div class="d-flex align-center justify-space-between flex-wrap my-6">
-                <VCheckbox
-                  v-model="form.remember"
-                  label="Remember me"
-                />
+              <div
+                class="d-flex align-center justify-space-between flex-wrap my-6"
+              >
+                <VCheckbox v-model="form.remember" label="Remember me" />
               </div>
 
-              <VBtn
-                block
-                type="submit"
-                :loading="isLoading"
-              >
-                Login
-              </VBtn>
+              <VBtn block type="submit" :loading="isLoading"> Login </VBtn>
             </VCol>
           </VRow>
         </VForm>
@@ -143,10 +114,7 @@ const handleLogin = async () => {
       :width="350"
     />
 
-    <VImg
-      class="auth-footer-mask d-none d-md-block"
-      :src="authThemeMask"
-    />
+    <VImg class="auth-footer-mask d-none d-md-block" :src="authThemeMask" />
   </div>
 </template>
 
