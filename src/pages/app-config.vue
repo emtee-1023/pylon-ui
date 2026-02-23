@@ -11,11 +11,15 @@ interface AppConfig {
   appDbId: number;
   platform: string;
   branding: {
-    primary_color: string;
-    secondary_color: string;
-    background_color: string;
-    surface_color: string;
-    theme_mode: string;
+    primary_color_light: string;
+    primary_color_dark: string;
+    secondary_color_light: string;
+    secondary_color_dark: string;
+    background_color_light: string;
+    background_color_dark: string;
+    surface_color_light: string;
+    surface_color_dark: string;
+    default_theme_mode: string;
     logo_url?: string;
   } | null;
   api_config: {
@@ -46,10 +50,19 @@ const newConfig = ref({
   app_id: null as number | null,
   branding: {
     themeMode: "system",
-    primaryColor: "#1976D2",
-    secondaryColor: "#424242",
-    surfaceColor: "#F5F5F5",
-    backgroundColor: "#FFFFFF",
+    logoUrl: "",
+    light: {
+      primaryColor: "#1976D2",
+      secondaryColor: "#424242",
+      surfaceColor: "#F5F5F5",
+      backgroundColor: "#FFFFFF",
+    },
+    dark: {
+      primaryColor: "#1976D2",
+      secondaryColor: "#424242",
+      surfaceColor: "#2D2D2D",
+      backgroundColor: "#1E1E1E",
+    },
   },
   api_config: {
     endpoint: "",
@@ -60,11 +73,20 @@ const showBrandingDialog = ref(false);
 const showApiEndpointDialog = ref(false);
 const editingConfig = ref<AppConfig | null>(null);
 const editBranding = ref({
-  primaryColor: "#1976D2",
-  secondaryColor: "#424242",
-  backgroundColor: "#FFFFFF",
-  surfaceColor: "#F5F5F5",
   themeMode: "system",
+  logoUrl: "",
+  light: {
+    primaryColor: "#1976D2",
+    secondaryColor: "#424242",
+    backgroundColor: "#FFFFFF",
+    surfaceColor: "#F5F5F5",
+  },
+  dark: {
+    primaryColor: "#1976D2",
+    secondaryColor: "#424242",
+    backgroundColor: "#1E1E1E",
+    surfaceColor: "#2D2D2D",
+  },
 });
 const editApiEndpoint = ref("");
 
@@ -120,10 +142,19 @@ const resetForm = () => {
     app_id: null,
     branding: {
       themeMode: "system",
-      primaryColor: "#1976D2",
-      secondaryColor: "#424242",
-      surfaceColor: "#F5F5F5",
-      backgroundColor: "#FFFFFF",
+      logoUrl: "",
+      light: {
+        primaryColor: "#1976D2",
+        secondaryColor: "#424242",
+        surfaceColor: "#F5F5F5",
+        backgroundColor: "#FFFFFF",
+      },
+      dark: {
+        primaryColor: "#1976D2",
+        secondaryColor: "#424242",
+        surfaceColor: "#2D2D2D",
+        backgroundColor: "#1E1E1E",
+      },
     },
     api_config: {
       endpoint: "",
@@ -136,11 +167,16 @@ const createConfig = async () => {
     await deploymentApi.createAppConfig({
       company_id: newConfig.value.company_id!,
       app_id: newConfig.value.app_id!,
-      primary_color: newConfig.value.branding.primaryColor,
-      secondary_color: newConfig.value.branding.secondaryColor,
-      surface_color: newConfig.value.branding.surfaceColor,
-      background_color: newConfig.value.branding.backgroundColor,
-      theme_mode: newConfig.value.branding.themeMode,
+      primary_color_light: newConfig.value.branding.light.primaryColor,
+      primary_color_dark: newConfig.value.branding.dark.primaryColor,
+      secondary_color_light: newConfig.value.branding.light.secondaryColor,
+      secondary_color_dark: newConfig.value.branding.dark.secondaryColor,
+      surface_color_light: newConfig.value.branding.light.surfaceColor,
+      surface_color_dark: newConfig.value.branding.dark.surfaceColor,
+      background_color_light: newConfig.value.branding.light.backgroundColor,
+      background_color_dark: newConfig.value.branding.dark.backgroundColor,
+      default_theme_mode: newConfig.value.branding.themeMode,
+      logo_url: newConfig.value.branding.logoUrl,
       api_endpoint: newConfig.value.api_config.endpoint,
     });
     showCreateDialog.value = false;
@@ -157,19 +193,32 @@ const createConfig = async () => {
 };
 
 const openBrandingDialog = (config: AppConfig) => {
-  const company = companies.value.find(c => c.company_id === config.company_id);
-  const deployment = deployments.value.find(d => d.app_name === config.app_name);
+  const company = companies.value.find(
+    (c) => c.company_id === config.company_id,
+  );
+  const deployment = deployments.value.find(
+    (d) => d.app_name === config.app_name,
+  );
   editingConfig.value = {
     ...config,
     companyDbId: company?.id || 0,
     appDbId: deployment?.app_id || 0,
   };
   editBranding.value = {
-    primaryColor: config.branding?.primary_color || "#1976D2",
-    secondaryColor: config.branding?.secondary_color || "#424242",
-    backgroundColor: config.branding?.background_color || "#FFFFFF",
-    surfaceColor: config.branding?.surface_color || "#F5F5F5",
-    themeMode: config.branding?.theme_mode || "system",
+    themeMode: config.branding?.default_theme_mode || "system",
+    logoUrl: config.branding?.logo_url || "",
+    light: {
+      primaryColor: config.branding?.primary_color_light || "#1976D2",
+      secondaryColor: config.branding?.secondary_color_light || "#424242",
+      backgroundColor: config.branding?.background_color_light || "#FFFFFF",
+      surfaceColor: config.branding?.surface_color_light || "#F5F5F5",
+    },
+    dark: {
+      primaryColor: config.branding?.primary_color_dark || "#1976D2",
+      secondaryColor: config.branding?.secondary_color_dark || "#424242",
+      backgroundColor: config.branding?.background_color_dark || "#1E1E1E",
+      surfaceColor: config.branding?.surface_color_dark || "#2D2D2D",
+    },
   };
   showBrandingDialog.value = true;
 };
@@ -180,11 +229,16 @@ const saveBranding = async () => {
     await deploymentApi.updateAppConfig(editingConfig.value.id, {
       company_id: editingConfig.value.companyDbId,
       app_id: editingConfig.value.appDbId,
-      primary_color: editBranding.value.primaryColor,
-      secondary_color: editBranding.value.secondaryColor,
-      background_color: editBranding.value.backgroundColor,
-      surface_color: editBranding.value.surfaceColor,
-      theme_mode: editBranding.value.themeMode,
+      primary_color_light: editBranding.value.light.primaryColor,
+      primary_color_dark: editBranding.value.dark.primaryColor,
+      secondary_color_light: editBranding.value.light.secondaryColor,
+      secondary_color_dark: editBranding.value.dark.secondaryColor,
+      background_color_light: editBranding.value.light.backgroundColor,
+      background_color_dark: editBranding.value.dark.backgroundColor,
+      surface_color_light: editBranding.value.light.surfaceColor,
+      surface_color_dark: editBranding.value.dark.surfaceColor,
+      default_theme_mode: editBranding.value.themeMode,
+      logo_url: editBranding.value.logoUrl,
     });
     showBrandingDialog.value = false;
     await fetchConfigs();
@@ -199,8 +253,12 @@ const saveBranding = async () => {
 };
 
 const openApiEndpointDialog = (config: AppConfig) => {
-  const company = companies.value.find(c => c.company_id === config.company_id);
-  const deployment = deployments.value.find(d => d.app_name === config.app_name);
+  const company = companies.value.find(
+    (c) => c.company_id === config.company_id,
+  );
+  const deployment = deployments.value.find(
+    (d) => d.app_name === config.app_name,
+  );
   editingConfig.value = {
     ...config,
     companyDbId: company?.id || 0,
@@ -213,14 +271,11 @@ const openApiEndpointDialog = (config: AppConfig) => {
 const saveApiEndpoint = async () => {
   if (!editingConfig.value) return;
   try {
-    await deploymentApi.updateAppConfig(
-      editingConfig.value.id,
-      {
-        company_id: editingConfig.value.companyDbId,
-        app_id: editingConfig.value.appDbId,
-        api_endpoint: editApiEndpoint.value,
-      },
-    );
+    await deploymentApi.updateAppConfig(editingConfig.value.id, {
+      company_id: editingConfig.value.companyDbId,
+      app_id: editingConfig.value.appDbId,
+      api_endpoint: editApiEndpoint.value,
+    });
     showApiEndpointDialog.value = false;
     await fetchConfigs();
     snackbarText.value = "API endpoint updated successfully";
@@ -234,8 +289,12 @@ const saveApiEndpoint = async () => {
 };
 
 const confirmDelete = (config: AppConfig) => {
-  const company = companies.value.find(c => c.company_id === config.company_id);
-  const deployment = deployments.value.find(d => d.app_name === config.app_name);
+  const company = companies.value.find(
+    (c) => c.company_id === config.company_id,
+  );
+  const deployment = deployments.value.find(
+    (d) => d.app_name === config.app_name,
+  );
   configToDelete.value = {
     ...config,
     companyDbId: company?.id || 0,
@@ -387,12 +446,37 @@ onMounted(() => {
           </VRow>
 
           <VExpansionPanels class="mt-4">
-            <VExpansionPanel title="Branding (Optional)">
+            <VExpansionPanel title="Company Settings (Optional)">
+              <VExpansionPanelText>
+                <VRow>
+                  <VCol cols="12" md="8">
+                    <VTextField
+                      v-model="newConfig.branding.logoUrl"
+                      label="Logo URL"
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </VCol>
+                  <VCol cols="12" md="4">
+                    <VSelect
+                      v-model="newConfig.branding.themeMode"
+                      label="Default Theme Mode"
+                      :items="[
+                        { title: 'System', value: 'system' },
+                        { title: 'Light', value: 'light' },
+                        { title: 'Dark', value: 'dark' },
+                      ]"
+                    />
+                  </VCol>
+                </VRow>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <VExpansionPanel title="Color Scheme (Light Mode)">
               <VExpansionPanelText>
                 <VRow>
                   <VCol cols="6" md="4">
                     <VTextField
-                      v-model="newConfig.branding.primaryColor"
+                      v-model="newConfig.branding.light.primaryColor"
                       label="Primary Color"
                       type="color"
                       density="compact"
@@ -400,7 +484,7 @@ onMounted(() => {
                   </VCol>
                   <VCol cols="6" md="4">
                     <VTextField
-                      v-model="newConfig.branding.secondaryColor"
+                      v-model="newConfig.branding.light.secondaryColor"
                       label="Secondary Color"
                       type="color"
                       density="compact"
@@ -408,7 +492,7 @@ onMounted(() => {
                   </VCol>
                   <VCol cols="6" md="4">
                     <VTextField
-                      v-model="newConfig.branding.backgroundColor"
+                      v-model="newConfig.branding.light.backgroundColor"
                       label="Background Color"
                       type="color"
                       density="compact"
@@ -416,21 +500,49 @@ onMounted(() => {
                   </VCol>
                   <VCol cols="6" md="4">
                     <VTextField
-                      v-model="newConfig.branding.surfaceColor"
+                      v-model="newConfig.branding.light.surfaceColor"
                       label="Surface Color"
                       type="color"
                       density="compact"
                     />
                   </VCol>
-                  <VCol cols="12" md="8">
-                    <VSelect
-                      v-model="newConfig.branding.themeMode"
-                      label="Theme Mode"
-                      :items="[
-                        { title: 'System', value: 'system' },
-                        { title: 'Light', value: 'light' },
-                        { title: 'Dark', value: 'dark' },
-                      ]"
+                </VRow>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <VExpansionPanel title="Color Scheme (Dark Mode)">
+              <VExpansionPanelText>
+                <VRow>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="newConfig.branding.dark.primaryColor"
+                      label="Primary Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="newConfig.branding.dark.secondaryColor"
+                      label="Secondary Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="newConfig.branding.dark.backgroundColor"
+                      label="Background Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="newConfig.branding.dark.surfaceColor"
+                      label="Surface Color"
+                      type="color"
+                      density="compact"
                     />
                   </VCol>
                 </VRow>
@@ -455,9 +567,7 @@ onMounted(() => {
           <VBtn
             color="primary"
             @click="createConfig"
-            :disabled="
-              !newConfig.company_id || !newConfig.app_id
-            "
+            :disabled="!newConfig.company_id || !newConfig.app_id"
           >
             Create
           </VBtn>
@@ -465,7 +575,7 @@ onMounted(() => {
       </VCard>
     </VDialog>
 
-    <VDialog v-model="showBrandingDialog" max-width="500" persistent>
+    <VDialog v-model="showBrandingDialog" max-width="700" persistent>
       <VCard>
         <VCardTitle class="d-flex justify-space-between align-center">
           <span>Edit Branding</span>
@@ -480,51 +590,110 @@ onMounted(() => {
         </VCardTitle>
 
         <VCardText>
-          <VRow>
-            <VCol cols="6" md="4">
-              <VTextField
-                v-model="editBranding.primaryColor"
-                label="Primary Color"
-                type="color"
-                density="compact"
-              />
-            </VCol>
-            <VCol cols="6" md="4">
-              <VTextField
-                v-model="editBranding.secondaryColor"
-                label="Secondary Color"
-                type="color"
-                density="compact"
-              />
-            </VCol>
-            <VCol cols="6" md="4">
-              <VTextField
-                v-model="editBranding.backgroundColor"
-                label="Background Color"
-                type="color"
-                density="compact"
-              />
-            </VCol>
-            <VCol cols="6" md="4">
-              <VTextField
-                v-model="editBranding.surfaceColor"
-                label="Surface Color"
-                type="color"
-                density="compact"
-              />
-            </VCol>
-            <VCol cols="12" md="8">
-              <VSelect
-                v-model="editBranding.themeMode"
-                label="Theme Mode"
-                :items="[
-                  { title: 'System', value: 'system' },
-                  { title: 'Light', value: 'light' },
-                  { title: 'Dark', value: 'dark' },
-                ]"
-              />
-            </VCol>
-          </VRow>
+          <VExpansionPanels>
+            <VExpansionPanel title="Branding">
+              <VExpansionPanelText>
+                <VRow>
+                  <VCol cols="12" md="8">
+                    <VTextField
+                      v-model="editBranding.logoUrl"
+                      label="Logo URL"
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </VCol>
+                  <VCol cols="12" md="4">
+                    <VSelect
+                      v-model="editBranding.themeMode"
+                      label="Default Theme Mode"
+                      :items="[
+                        { title: 'System', value: 'system' },
+                        { title: 'Light', value: 'light' },
+                        { title: 'Dark', value: 'dark' },
+                      ]"
+                    />
+                  </VCol>
+                </VRow>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <VExpansionPanel title="Colors (Light)">
+              <VExpansionPanelText>
+                <VRow>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.light.primaryColor"
+                      label="Primary Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.light.secondaryColor"
+                      label="Secondary Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.light.backgroundColor"
+                      label="Background Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.light.surfaceColor"
+                      label="Surface Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                </VRow>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+
+            <VExpansionPanel title="Colors (Dark)">
+              <VExpansionPanelText>
+                <VRow>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.dark.primaryColor"
+                      label="Primary Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.dark.secondaryColor"
+                      label="Secondary Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.dark.backgroundColor"
+                      label="Background Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.dark.surfaceColor"
+                      label="Surface Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                </VRow>
+              </VExpansionPanelText>
+            </VExpansionPanel>
+          </VExpansionPanels>
         </VCardText>
 
         <VCardActions>

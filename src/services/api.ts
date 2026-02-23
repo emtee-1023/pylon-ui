@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.100.39:8000/api";
+const API_BASE_URL = "http://192.168.88.189:8000/api";
 
 const getToken = () => localStorage.getItem("token");
 
@@ -14,16 +14,16 @@ const getHeaders = () => {
 };
 
 const handleResponse = async (response: Response) => {
-  if (response.type === 'opaque' || response.redirected) {
-    window.location.href = '/login'
-    throw new Error('Redirected to login')
+  if (response.type === "opaque" || response.redirected) {
+    window.location.href = "/login";
+    throw new Error("Redirected to login");
   }
-  
+
   if (!response.ok) {
-    const contentType = response.headers.get('content-type')
-    if (contentType?.includes('text/html')) {
-      window.location.href = '/login'
-      throw new Error('Redirected to login')
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("text/html")) {
+      window.location.href = "/login";
+      throw new Error("Redirected to login");
     }
     const errorData = await response
       .json()
@@ -78,11 +78,16 @@ export const deploymentApi = {
   createCompany: async (data: {
     company_name: string;
     app_id: number;
-    primary_color?: string;
-    secondary_color?: string;
-    background_color?: string;
-    surface_color?: string;
-    theme_mode?: string;
+    primary_color_light?: string;
+    primary_color_dark?: string;
+    secondary_color_light?: string;
+    secondary_color_dark?: string;
+    background_color_light?: string;
+    background_color_dark?: string;
+    surface_color_light?: string;
+    surface_color_dark?: string;
+    default_theme_mode?: string;
+    logo_url?: string;
     api_endpoint?: string;
   }) => {
     const response = await fetch(`${API_BASE_URL}/companies`, {
@@ -145,11 +150,16 @@ export const deploymentApi = {
   createAppConfig: async (data: {
     company_id: number;
     app_id: number;
-    primary_color?: string;
-    secondary_color?: string;
-    background_color?: string;
-    surface_color?: string;
-    theme_mode?: string;
+    primary_color_light?: string;
+    primary_color_dark?: string;
+    secondary_color_light?: string;
+    secondary_color_dark?: string;
+    background_color_light?: string;
+    background_color_dark?: string;
+    surface_color_light?: string;
+    surface_color_dark?: string;
+    default_theme_mode?: string;
+    logo_url?: string;
     api_endpoint?: string;
   }) => {
     const response = await fetch(`${API_BASE_URL}/app-configs`, {
@@ -160,16 +170,24 @@ export const deploymentApi = {
     return handleResponse(response);
   },
 
-  updateAppConfig: async (id: number, data: {
-    company_id?: number;
-    app_id?: number;
-    primary_color?: string;
-    secondary_color?: string;
-    background_color?: string;
-    surface_color?: string;
-    theme_mode?: string;
-    api_endpoint?: string;
-  }) => {
+  updateAppConfig: async (
+    id: number,
+    data: {
+      company_id?: number;
+      app_id?: number;
+      primary_color_light?: string;
+      primary_color_dark?: string;
+      secondary_color_light?: string;
+      secondary_color_dark?: string;
+      background_color_light?: string;
+      background_color_dark?: string;
+      surface_color_light?: string;
+      surface_color_dark?: string;
+      default_theme_mode?: string;
+      logo_url?: string;
+      api_endpoint?: string;
+    },
+  ) => {
     const response = await fetch(`${API_BASE_URL}/app-configs/update`, {
       method: "PATCH",
       headers: getHeaders(),
