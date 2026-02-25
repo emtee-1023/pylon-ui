@@ -19,6 +19,8 @@ interface AppConfig {
     background_color_dark: string;
     surface_color_light: string;
     surface_color_dark: string;
+    text_color_light: string;
+    text_color_dark: string;
     default_theme_mode: string;
     logo_url?: string;
   } | null;
@@ -56,12 +58,14 @@ const newConfig = ref({
       secondaryColor: "#424242",
       surfaceColor: "#F5F5F5",
       backgroundColor: "#FFFFFF",
+      textColor: "#000000",
     },
     dark: {
       primaryColor: "#1976D2",
       secondaryColor: "#424242",
       surfaceColor: "#2D2D2D",
       backgroundColor: "#1E1E1E",
+      textColor: "#FFFFFF",
     },
   },
   api_config: {
@@ -80,18 +84,25 @@ const editBranding = ref({
     secondaryColor: "#424242",
     backgroundColor: "#FFFFFF",
     surfaceColor: "#F5F5F5",
+    textColor: "#000000",
   },
   dark: {
     primaryColor: "#1976D2",
     secondaryColor: "#424242",
     backgroundColor: "#1E1E1E",
     surfaceColor: "#2D2D2D",
+    textColor: "#FFFFFF",
   },
 });
 const editApiEndpoint = ref("");
 
 const showDeleteDialog = ref(false);
 const configToDelete = ref<AppConfig | null>(null);
+
+const showQrCodeDialog = ref(false);
+const qrCodeData = ref("");
+const qrCodeConfig = ref<AppConfig | null>(null);
+const isLoadingQrCode = ref(false);
 
 const snackbar = ref(false);
 const snackbarText = ref("");
@@ -148,12 +159,14 @@ const resetForm = () => {
         secondaryColor: "#424242",
         surfaceColor: "#F5F5F5",
         backgroundColor: "#FFFFFF",
+        textColor: "#000000",
       },
       dark: {
         primaryColor: "#1976D2",
         secondaryColor: "#424242",
         surfaceColor: "#2D2D2D",
         backgroundColor: "#1E1E1E",
+        textColor: "#FFFFFF",
       },
     },
     api_config: {
@@ -175,6 +188,8 @@ const createConfig = async () => {
       surface_color_dark: newConfig.value.branding.dark.surfaceColor,
       background_color_light: newConfig.value.branding.light.backgroundColor,
       background_color_dark: newConfig.value.branding.dark.backgroundColor,
+      text_color_light: newConfig.value.branding.light.textColor,
+      text_color_dark: newConfig.value.branding.dark.textColor,
       default_theme_mode: newConfig.value.branding.themeMode,
       logo_url: newConfig.value.branding.logoUrl,
       api_endpoint: newConfig.value.api_config.endpoint,
@@ -212,12 +227,14 @@ const openBrandingDialog = (config: AppConfig) => {
       secondaryColor: config.branding?.secondary_color_light || "#424242",
       backgroundColor: config.branding?.background_color_light || "#FFFFFF",
       surfaceColor: config.branding?.surface_color_light || "#F5F5F5",
+      textColor: config.branding?.text_color_light || "#000000",
     },
     dark: {
       primaryColor: config.branding?.primary_color_dark || "#1976D2",
       secondaryColor: config.branding?.secondary_color_dark || "#424242",
       backgroundColor: config.branding?.background_color_dark || "#1E1E1E",
       surfaceColor: config.branding?.surface_color_dark || "#2D2D2D",
+      textColor: config.branding?.text_color_dark || "#FFFFFF",
     },
   };
   showBrandingDialog.value = true;
@@ -237,6 +254,8 @@ const saveBranding = async () => {
       background_color_dark: editBranding.value.dark.backgroundColor,
       surface_color_light: editBranding.value.light.surfaceColor,
       surface_color_dark: editBranding.value.dark.surfaceColor,
+      text_color_light: editBranding.value.light.textColor,
+      text_color_dark: editBranding.value.dark.textColor,
       default_theme_mode: editBranding.value.themeMode,
       logo_url: editBranding.value.logoUrl,
     });
@@ -325,6 +344,68 @@ const deleteConfig = async () => {
   }
 };
 
+const openQrCodeDialog = async (config: AppConfig) => {
+  const company = companies.value.find(
+    (c) => c.company_id === config.company_id,
+  );
+  const deployment = deployments.value.find(
+    (d) => d.app_name === config.app_name,
+  );
+  qrCodeConfig.value = {
+    ...config,
+    companyDbId: company?.id || 0,
+    appDbId: deployment?.app_id || 0,
+  };
+  showQrCodeDialog.value = true;
+  isLoadingQrCode.value = true;
+  qrCodeData.value = "";
+  try {
+    const response = await deploymentApi.getAppConfigQrCode(
+      qrCodeConfig.value.companyDbId,
+      qrCodeConfig.value.appDbId,
+    );
+    qrCodeData.value = response.qr_code;
+  } catch (error: any) {
+    snackbarText.value = error.message;
+    snackbarColor.value = "error";
+    snackbar.value = true;
+  } finally {
+    isLoadingQrCode.value = false;
+  }
+};
+
+const printQrCode = () => {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow || !qrCodeData.value) return;
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>QR Code - ${qrCodeConfig.value?.app_name}</title>
+        <style>
+          body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+          }
+          h2 { margin-bottom: 20px; }
+          img { max-width: 300px; }
+        </style>
+      </head>
+      <body>
+        <h2>${qrCodeConfig.value?.app_name} App Configuration - ${qrCodeConfig.value?.company_name}</h2>
+        <img src="${qrCodeData.value}" alt="QR Code" />
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.print();
+};
+
 onMounted(() => {
   fetchConfigs();
   fetchCompanies();
@@ -356,6 +437,7 @@ onMounted(() => {
               <th>Platform</th>
               <th>Branding</th>
               <th>API Endpoint</th>
+              <th>QR Code</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -389,6 +471,17 @@ onMounted(() => {
               </td>
               <td>
                 <VBtn
+                  size="small"
+                  variant="tonal"
+                  color="primary"
+                  @click="openQrCodeDialog(config)"
+                >
+                  <VIcon icon="ri-qr-code-line" class="mr-1" />
+                  View
+                </VBtn>
+              </td>
+              <td>
+                <VBtn
                   icon
                   size="small"
                   variant="text"
@@ -400,7 +493,7 @@ onMounted(() => {
               </td>
             </tr>
             <tr v-if="configs.length === 0 && !isLoading">
-              <td colspan="7" class="text-center text-grey">
+              <td colspan="8" class="text-center text-grey">
                 No configurations found
               </td>
             </tr>
@@ -506,6 +599,14 @@ onMounted(() => {
                       density="compact"
                     />
                   </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="newConfig.branding.light.textColor"
+                      label="Text Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
                 </VRow>
               </VExpansionPanelText>
             </VExpansionPanel>
@@ -541,6 +642,14 @@ onMounted(() => {
                     <VTextField
                       v-model="newConfig.branding.dark.surfaceColor"
                       label="Surface Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="newConfig.branding.dark.textColor"
+                      label="Text Color"
                       type="color"
                       density="compact"
                     />
@@ -651,6 +760,14 @@ onMounted(() => {
                       density="compact"
                     />
                   </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.light.textColor"
+                      label="Text Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
                 </VRow>
               </VExpansionPanelText>
             </VExpansionPanel>
@@ -686,6 +803,14 @@ onMounted(() => {
                     <VTextField
                       v-model="editBranding.dark.surfaceColor"
                       label="Surface Color"
+                      type="color"
+                      density="compact"
+                    />
+                  </VCol>
+                  <VCol cols="6" md="4">
+                    <VTextField
+                      v-model="editBranding.dark.textColor"
+                      label="Text Color"
                       type="color"
                       density="compact"
                     />
@@ -757,6 +882,57 @@ onMounted(() => {
           <VSpacer />
           <VBtn variant="text" @click="showDeleteDialog = false"> Cancel </VBtn>
           <VBtn color="error" @click="deleteConfig"> Delete </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <VDialog v-model="showQrCodeDialog" max-width="400" persistent>
+      <VCard>
+        <VCardTitle class="d-flex justify-space-between align-center">
+          <span>QR Code</span>
+          <VBtn
+            icon
+            variant="text"
+            size="small"
+            @click="showQrCodeDialog = false"
+          >
+            <VIcon icon="ri-close-line" />
+          </VBtn>
+        </VCardTitle>
+
+        <VCardText class="text-center">
+          <p class="mb-4">
+            Scan this QR code to configure
+            <strong>{{ qrCodeConfig?.app_name }}</strong> for
+            <strong>{{ qrCodeConfig?.company_name }}</strong>
+          </p>
+          <VProgressCircular
+            v-if="isLoadingQrCode"
+            indeterminate
+            color="primary"
+          />
+          <div v-else-if="qrCodeData" class="qr-code-container">
+            <img
+              :src="qrCodeData"
+              alt="QR Code"
+              style="max-width: 100%; height: auto"
+            />
+          </div>
+          <p v-else class="text-grey">Failed to load QR code</p>
+        </VCardText>
+
+        <VCardActions>
+          <VBtn
+            v-if="qrCodeData"
+            variant="text"
+            color="primary"
+            @click="printQrCode"
+          >
+            <VIcon icon="ri-printer-line" class="mr-1" />
+            Print
+          </VBtn>
+          <VSpacer />
+          <VBtn variant="text" @click="showQrCodeDialog = false"> Close </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>

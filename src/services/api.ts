@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://192.168.88.129:8001/api";
+const API_BASE_URL = "http://192.168.88.189:8000/api";
 
 const getToken = () => localStorage.getItem("token");
 
@@ -86,6 +86,8 @@ export const deploymentApi = {
     background_color_dark?: string;
     surface_color_light?: string;
     surface_color_dark?: string;
+    text_color_light?: string;
+    text_color_dark?: string;
     default_theme_mode?: string;
     logo_url?: string;
     api_endpoint?: string;
@@ -158,6 +160,8 @@ export const deploymentApi = {
     background_color_dark?: string;
     surface_color_light?: string;
     surface_color_dark?: string;
+    text_color_light?: string;
+    text_color_dark?: string;
     default_theme_mode?: string;
     logo_url?: string;
     api_endpoint?: string;
@@ -183,6 +187,8 @@ export const deploymentApi = {
       background_color_dark?: string;
       surface_color_light?: string;
       surface_color_dark?: string;
+      text_color_light?: string;
+      text_color_dark?: string;
       default_theme_mode?: string;
       logo_url?: string;
       api_endpoint?: string;
@@ -202,6 +208,17 @@ export const deploymentApi = {
       headers: getHeaders(),
       body: JSON.stringify({ id, company_id, app_id }),
     });
+    return handleResponse(response);
+  },
+
+  getAppConfigQrCode: async (company_id: number, app_id: number) => {
+    const response = await fetch(
+      `${API_BASE_URL}/app-configs-qrcode/${company_id}/${app_id}`,
+      {
+        method: "GET",
+        headers: getHeaders(),
+      },
+    );
     return handleResponse(response);
   },
 };
